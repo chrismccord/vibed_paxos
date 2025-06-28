@@ -75,6 +75,21 @@ defmodule PaxosConsensus.Paxos.Learner do
 
   @impl true
   def handle_cast({:accepted, accepted}, state) do
+    handle_accepted_message(accepted, state)
+  end
+
+  @impl true
+  def handle_info({:accepted, accepted}, state) do
+    handle_accepted_message(accepted, state)
+  end
+
+  def handle_info(_msg, state) do
+    # Ignore unknown messages
+    {:noreply, state}
+  end
+
+  # Private helper for handling accepted messages from both cast and info
+  defp handle_accepted_message(accepted, state) do
     proposal_number = accepted.proposal_number
 
     # Add this accepted message to pending accepts for this proposal
@@ -111,11 +126,5 @@ defmodule PaxosConsensus.Paxos.Learner do
       new_state = %{state | pending_accepts: new_pending_accepts}
       {:noreply, new_state}
     end
-  end
-
-  @impl true
-  def handle_info(_msg, state) do
-    # Ignore unknown messages
-    {:noreply, state}
   end
 end
