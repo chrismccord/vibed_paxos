@@ -4,6 +4,8 @@ defmodule PaxosConsensusWeb.DashboardLive do
   alias PaxosConsensus.Paxos.{Proposer, Acceptor, Learner}
   alias PaxosConsensus.NodeRegistry
 
+  @impl true
+  def mount(_params, _session, socket) do
     # Subscribe to all Paxos updates
     Phoenix.PubSub.subscribe(PaxosConsensus.PubSub, "paxos_updates")
     Phoenix.PubSub.subscribe(PaxosConsensus.PubSub, "learner_updates")
@@ -37,6 +39,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     {:ok, assign(socket, initial_state)}
   end
 
+  @impl true
   def handle_event("setup_nodes", %{"count" => count_str}, socket) do
     count = String.to_integer(count_str)
 
@@ -91,6 +94,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     end
   end
 
+  @impl true
   def handle_event("propose_value", %{"value" => value}, socket) do
     case NodeRegistry.get_random_proposer() do
       nil ->
@@ -129,6 +133,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     end
   end
 
+  @impl true
   def handle_event("stop_all_nodes", _params, socket) do
     NodeRegistry.clear_all_nodes()
 
@@ -148,7 +153,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
      |> add_message(message)}
   end
 
-  # Handle real-time PubSub messages from Paxos nodes
+  @impl true
   def handle_info({:prepare_sent, round_id, proposal_number, value}, socket) do
     message = %{
       timestamp: DateTime.utc_now(),
@@ -159,6 +164,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     {:noreply, add_message(socket, message)}
   end
 
+  @impl true
   def handle_info({:promise_sent, acceptor_id, proposal_number, _from}, socket) do
     message = %{
       timestamp: DateTime.utc_now(),
@@ -169,6 +175,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     {:noreply, add_message(socket, message)}
   end
 
+  @impl true
   def handle_info({:accept_sent, round_id, proposal_number, value}, socket) do
     message = %{
       timestamp: DateTime.utc_now(),
@@ -179,6 +186,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     {:noreply, add_message(socket, message)}
   end
 
+  @impl true
   def handle_info({:accepted_sent, acceptor_id, proposal_number, value, _from}, socket) do
     message = %{
       timestamp: DateTime.utc_now(),
@@ -189,6 +197,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     {:noreply, add_message(socket, message)}
   end
 
+  @impl true
   def handle_info({:consensus_achieved, round_id, value}, socket) do
     message = %{
       timestamp: DateTime.utc_now(),
@@ -205,6 +214,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
      |> add_message(message)}
   end
 
+  @impl true
   def handle_info({:value_learned, learner_id, proposal_number, value}, socket) do
     message = %{
       timestamp: DateTime.utc_now(),
@@ -215,6 +225,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     {:noreply, add_message(socket, message)}
   end
 
+  @impl true
   def handle_info(_msg, socket) do
     {:noreply, socket}
   end
