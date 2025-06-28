@@ -12,7 +12,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
 
     # Get current nodes from persistent registry
     nodes = NodeRegistry.get_all_nodes()
-    stats = NodeRegistry.get_stats()
+    _stats = NodeRegistry.get_stats()
 
     initial_state = %{
       # Node management from registry
