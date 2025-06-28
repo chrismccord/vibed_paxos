@@ -101,6 +101,13 @@ defmodule PaxosConsensus.Paxos.Acceptor do
       }
 
       # Send accepted back to proposer
+      # Also notify any learners listening
+      Phoenix.PubSub.broadcast(
+        PaxosConsensus.PubSub,
+        "learner_updates",
+        {:accepted, accepted}
+      )
+
       send(from, {:accepted, accepted})
 
       # Broadcast to dashboard
