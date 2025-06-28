@@ -4,7 +4,6 @@ defmodule PaxosConsensusWeb.DashboardLive do
   alias PaxosConsensus.Paxos.{Proposer, Acceptor, Learner}
   alias PaxosConsensus.NodeRegistry
 
-  def mount(_params, _session, socket) do
     # Subscribe to all Paxos updates
     Phoenix.PubSub.subscribe(PaxosConsensus.PubSub, "paxos_updates")
     Phoenix.PubSub.subscribe(PaxosConsensus.PubSub, "learner_updates")
