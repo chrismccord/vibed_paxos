@@ -125,7 +125,7 @@ defmodule PaxosConsensus.Paxos.Acceptor do
   end
 
   @impl true
-  def handle_info(msg, state) do
+  def handle_info(_msg, state) do
     # Ignore unknown messages
     {:noreply, state}
   end
