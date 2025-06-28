@@ -135,10 +135,13 @@ defmodule PaxosConsensus.Paxos.Proposer do
         updated_round = %{round | promises: [promise | round.promises]}
         majority = div(length(state.acceptors), 2) + 1
 
-        if length(updated_round.promises) >= majority do
-          # We have majority promises, move to accept phase
-          updated_round = send_accept_messages(updated_round, state)
-        end
+        updated_round =
+          if length(updated_round.promises) >= majority do
+            # We have majority promises, move to accept phase
+            send_accept_messages(updated_round, state)
+          else
+            updated_round
+          end
 
         new_state = %{
           state
@@ -184,6 +187,8 @@ defmodule PaxosConsensus.Paxos.Proposer do
           }
 
           {:noreply, new_state}
+        else
+          updated_round
         end
     end
   end
