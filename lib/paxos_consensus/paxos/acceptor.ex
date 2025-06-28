@@ -72,10 +72,25 @@ defmodule PaxosConsensus.Paxos.Acceptor do
         from: state.node_id
       }
 
-      # Send promise back to proposer
-      if is_pid(from),
-        do: send(from, {:promise, promise}),
-        else: send(Process.whereis(from), {:promise, promise})
+      # Send promise back to proposer - handle both PID and atom names
+      cond do
+        is_pid(from) ->
+          send(from, {:promise, promise})
+
+        is_atom(from) ->
+          case Process.whereis(from) do
+            nil ->
+              # If proposer process not found, skip sending
+              :ok
+
+            pid ->
+              send(pid, {:promise, promise})
+          end
+
+        true ->
+          # Unknown from type, skip
+          :ok
+      end
 
       # Broadcast to dashboard
       Phoenix.PubSub.broadcast(
@@ -110,9 +125,25 @@ defmodule PaxosConsensus.Paxos.Acceptor do
         {:accepted, accepted}
       )
 
-      if is_pid(from),
-        do: send(from, {:accepted, accepted}),
-        else: send(Process.whereis(from), {:accepted, accepted})
+      # Send to proposer - handle both PID and atom names  
+      cond do
+        is_pid(from) ->
+          send(from, {:accepted, accepted})
+
+        is_atom(from) ->
+          case Process.whereis(from) do
+            nil ->
+              # If proposer process not found, skip sending
+              :ok
+
+            pid ->
+              send(pid, {:accepted, accepted})
+          end
+
+        true ->
+          # Unknown from type, skip
+          :ok
+      end
 
       # Broadcast to dashboard
       Phoenix.PubSub.broadcast(
