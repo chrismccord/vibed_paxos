@@ -10,6 +10,7 @@ defmodule PaxosConsensus.Application do
     children = [
       PaxosConsensusWeb.Telemetry,
       PaxosConsensus.Repo,
+      PaxosConsensus.NodeRegistry,
       {Ecto.Migrator,
        repos: Application.fetch_env!(:paxos_consensus, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:paxos_consensus, :dns_cluster_query) || :ignore},
