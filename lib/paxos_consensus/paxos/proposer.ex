@@ -187,8 +187,6 @@ defmodule PaxosConsensus.Paxos.Proposer do
           }
 
           {:noreply, new_state}
-        else
-          updated_round
         end
     end
   end
