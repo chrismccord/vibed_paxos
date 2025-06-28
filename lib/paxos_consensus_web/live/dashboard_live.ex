@@ -2,18 +2,23 @@ defmodule PaxosConsensusWeb.DashboardLive do
   use PaxosConsensusWeb, :live_view
 
   alias PaxosConsensus.Paxos.{Proposer, Acceptor, Learner}
+  alias PaxosConsensus.NodeRegistry
 
   def mount(_params, _session, socket) do
     # Subscribe to all Paxos updates
     Phoenix.PubSub.subscribe(PaxosConsensus.PubSub, "paxos_updates")
     Phoenix.PubSub.subscribe(PaxosConsensus.PubSub, "learner_updates")
 
+    # Get current nodes from persistent registry
+    nodes = NodeRegistry.get_all_nodes()
+    stats = NodeRegistry.get_stats()
+
     initial_state = %{
-      # Node management
-      proposers: %{},
-      acceptors: %{},
-      learners: %{},
-      node_counter: 0,
+      # Node management from registry
+      proposers: nodes.proposers,
+      acceptors: nodes.acceptors,
+      learners: nodes.learners,
+      node_counter: nodes.node_counter,
 
       # Real-time activity
       message_log: [],
@@ -36,8 +41,8 @@ defmodule PaxosConsensusWeb.DashboardLive do
   def handle_event("setup_nodes", %{"count" => count_str}, socket) do
     count = String.to_integer(count_str)
 
-    # Stop existing nodes
-    stop_all_nodes(socket.assigns)
+    # Clear existing nodes from registry
+    NodeRegistry.clear_all_nodes()
 
     debug_message = %{
       timestamp: DateTime.utc_now(),
@@ -50,6 +55,9 @@ defmodule PaxosConsensusWeb.DashboardLive do
     # Start new nodes
     case start_paxos_cluster(count) do
       {proposers, acceptors, learners} ->
+        # Register nodes in persistent registry
+        NodeRegistry.register_nodes(proposers, acceptors, learners)
+
         success_message = %{
           timestamp: DateTime.utc_now(),
           type: :system,
@@ -84,8 +92,8 @@ defmodule PaxosConsensusWeb.DashboardLive do
     end
   end
 
-  def handle_event("propose_value", %{"proposal" => %{"value" => value}}, socket) do
-    case get_random_proposer(socket.assigns.proposers) do
+  def handle_event("propose_value", %{"value" => value}, socket) do
+    case NodeRegistry.get_random_proposer() do
       nil ->
         message = %{
           timestamp: DateTime.utc_now(),
@@ -123,7 +131,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
   end
 
   def handle_event("stop_all_nodes", _params, socket) do
-    stop_all_nodes(socket.assigns)
+    NodeRegistry.clear_all_nodes()
 
     message = %{
       timestamp: DateTime.utc_now(),
@@ -287,33 +295,6 @@ defmodule PaxosConsensusWeb.DashboardLive do
     IO.puts("DEBUG: All processes alive? #{all_alive}")
 
     {proposers, acceptors, learners}
-  end
-
-  defp stop_all_nodes(assigns) do
-    # Stop all GenServers safely
-    all_pids =
-      Map.values(assigns.proposers) ++
-        Map.values(assigns.acceptors) ++
-        Map.values(assigns.learners)
-
-    IO.puts("DEBUG: Stopping #{length(all_pids)} nodes...")
-
-    Enum.each(all_pids, fn pid ->
-      if Process.alive?(pid) do
-        IO.puts("DEBUG: Stopping PID #{inspect(pid)}")
-        GenServer.stop(pid)
-      else
-        IO.puts("DEBUG: PID #{inspect(pid)} already dead")
-      end
-    end)
-
-    IO.puts("DEBUG: All nodes stopped")
-  end
-
-  defp get_random_proposer(proposers) when map_size(proposers) == 0, do: nil
-
-  defp get_random_proposer(proposers) do
-    proposers |> Enum.random()
   end
 
   defp add_message(socket, message) do
