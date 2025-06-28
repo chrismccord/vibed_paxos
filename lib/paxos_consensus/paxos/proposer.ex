@@ -9,7 +9,7 @@ defmodule PaxosConsensus.Paxos.Proposer do
 
   use GenServer
 
-  alias PaxosConsensus.Paxos.{Proposal, Promise, Accept, ConsensusRound}
+  alias PaxosConsensus.Paxos.{Proposal, ConsensusRound}
 
   defstruct [
     :node_id,
