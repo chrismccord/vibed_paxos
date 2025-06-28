@@ -17,7 +17,7 @@ defmodule PaxosConsensusWeb.Router do
   scope "/", PaxosConsensusWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", DashboardLive
   end
 
   # Other scopes may use custom stacks.
