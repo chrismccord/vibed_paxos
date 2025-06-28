@@ -33,7 +33,7 @@ defmodule PaxosConsensusWeb.DashboardLive do
     {:ok, assign(socket, initial_state)}
   end
 
-  def handle_event("setup_nodes", %{"node" => %{"count" => count_str}}, socket) do
+  def handle_event("setup_nodes", %{"count" => count_str}, socket) do
     count = String.to_integer(count_str)
 
     # Stop existing nodes
