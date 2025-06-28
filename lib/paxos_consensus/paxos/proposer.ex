@@ -32,7 +32,11 @@ defmodule PaxosConsensus.Paxos.Proposer do
   def start_link(opts) do
     node_id = Keyword.fetch!(opts, :node_id)
     acceptors = Keyword.fetch!(opts, :acceptors)
-    GenServer.start_link(__MODULE__, {node_id, acceptors}, name: node_id)
+
+    # Generate unique proposal number base from node_id and timestamp
+    unique_base = :erlang.phash2({node_id, System.monotonic_time()}) |> rem(1000)
+
+    GenServer.start_link(__MODULE__, {node_id, acceptors, unique_base}, name: node_id)
   end
 
   def propose(proposer, value) do
@@ -54,11 +58,11 @@ defmodule PaxosConsensus.Paxos.Proposer do
   ## Server Callbacks
 
   @impl true
-  def init({node_id, acceptors}) do
+  def init({node_id, acceptors, unique_base}) do
     state = %__MODULE__{
       node_id: node_id,
       acceptors: acceptors,
-      current_proposal_number: 0,
+      current_proposal_number: unique_base,
       active_rounds: %{},
       completed_rounds: []
     }
@@ -81,7 +85,8 @@ defmodule PaxosConsensus.Paxos.Proposer do
 
   @impl true
   def handle_call({:propose, value}, _from, state) do
-    proposal_number = state.current_proposal_number + 1
+    # Generate unique proposal number that's guaranteed to be higher
+    proposal_number = state.current_proposal_number + :erlang.unique_integer([:positive])
     round_id = proposal_number
 
     proposal = %Proposal{
@@ -129,14 +134,24 @@ defmodule PaxosConsensus.Paxos.Proposer do
   def handle_cast({:promise, promise}, state) do
     case Map.get(state.active_rounds, promise.proposal_number) do
       nil ->
+        # Promise for unknown round, ignore
         {:noreply, state}
 
       round ->
-        updated_round = %{round | promises: [promise | round.promises]}
+        # Check if we already have this promise (prevent duplicates)
+        existing_promise = Enum.find(round.promises, fn p -> p.from == promise.from end)
+
+        updated_round =
+          if existing_promise do
+            round
+          else
+            %{round | promises: [promise | round.promises]}
+          end
+
         majority = div(length(state.acceptors), 2) + 1
 
         updated_round =
-          if length(updated_round.promises) >= majority do
+          if length(updated_round.promises) >= majority and updated_round.phase == :prepare do
             # We have majority promises, move to accept phase
             send_accept_messages(updated_round, state)
           else
@@ -156,10 +171,20 @@ defmodule PaxosConsensus.Paxos.Proposer do
   def handle_cast({:accepted, accepted}, state) do
     case Map.get(state.active_rounds, accepted.proposal_number) do
       nil ->
+        # Accepted for unknown round, ignore
         {:noreply, state}
 
       round ->
-        updated_round = %{round | accepts: [accepted | round.accepts]}
+        # Check if we already have this accepted (prevent duplicates)
+        existing_accepted = Enum.find(round.accepts, fn a -> a.from == accepted.from end)
+
+        updated_round =
+          if existing_accepted do
+            round
+          else
+            %{round | accepts: [accepted | round.accepts]}
+          end
+
         majority = div(length(state.acceptors), 2) + 1
 
         if length(updated_round.accepts) >= majority do
