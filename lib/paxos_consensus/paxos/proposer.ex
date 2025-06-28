@@ -34,7 +34,10 @@ defmodule PaxosConsensus.Paxos.Proposer do
     acceptors = Keyword.fetch!(opts, :acceptors)
 
     # Generate unique proposal number base from node_id and timestamp
-    unique_base = :erlang.phash2({node_id, System.monotonic_time()}) |> rem(1000)
+    # Use node_id hash to ensure different proposers have different starting points
+    node_hash = :erlang.phash2(node_id) |> rem(100)
+    timestamp = System.monotonic_time(:millisecond)
+    unique_base = node_hash * 10000 + rem(timestamp, 10000)
 
     GenServer.start_link(__MODULE__, {node_id, acceptors, unique_base}, name: node_id)
   end
@@ -86,7 +89,8 @@ defmodule PaxosConsensus.Paxos.Proposer do
   @impl true
   def handle_call({:propose, value}, _from, state) do
     # Generate unique proposal number that's guaranteed to be higher
-    proposal_number = state.current_proposal_number + :erlang.unique_integer([:positive])
+    # Use incremental counter plus unique integer to avoid conflicts
+    proposal_number = state.current_proposal_number + 1 + :erlang.unique_integer([:positive])
     round_id = proposal_number
 
     proposal = %Proposal{
@@ -219,12 +223,18 @@ defmodule PaxosConsensus.Paxos.Proposer do
   # Private helpers
 
   defp send_accept_messages(round, state) do
-    # Choose the value from the highest-numbered accepted proposal among promises
-    # If no prior proposals, use our proposed value
+    # CRITICAL: Choose the value from the highest-numbered accepted proposal among promises
+    # This is the core safety property of Paxos - if any acceptor has previously accepted
+    # a proposal, we MUST use that value, not our own proposed value
     value =
       case find_highest_accepted_proposal(round.promises) do
-        nil -> round.proposal.value
-        highest_proposal -> highest_proposal.value
+        nil ->
+          # No previous proposals, use our proposed value
+          round.proposal.value
+
+        highest_proposal ->
+          # Previous proposal exists - we MUST use that value for safety
+          highest_proposal.value
       end
 
     # Send ACCEPT messages to all acceptors
