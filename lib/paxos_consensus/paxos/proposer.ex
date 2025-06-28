@@ -54,6 +54,19 @@ defmodule PaxosConsensus.Paxos.Proposer do
   ## Server Callbacks
 
   @impl true
+  def handle_info({:promise, promise}, state) do
+    handle_cast({:promise, promise}, state)
+  end
+
+  def handle_info({:accepted, accepted}, state) do
+    handle_cast({:accepted, accepted}, state)
+  end
+
+  def handle_info(_msg, state) do
+    {:noreply, state}
+  end
+
+  @impl true
   def init({node_id, acceptors}) do
     state = %__MODULE__{
       node_id: node_id,
@@ -64,6 +77,19 @@ defmodule PaxosConsensus.Paxos.Proposer do
     }
 
     {:ok, state}
+  end
+
+  @impl true
+  def handle_info({:promise, promise}, state) do
+    handle_cast({:promise, promise}, state)
+  end
+
+  def handle_info({:accepted, accepted}, state) do
+    handle_cast({:accepted, accepted}, state)
+  end
+
+  def handle_info(_msg, state) do
+    {:noreply, state}
   end
 
   @impl true
@@ -108,8 +134,34 @@ defmodule PaxosConsensus.Paxos.Proposer do
   end
 
   @impl true
+  def handle_info({:promise, promise}, state) do
+    handle_cast({:promise, promise}, state)
+  end
+
+  def handle_info({:accepted, accepted}, state) do
+    handle_cast({:accepted, accepted}, state)
+  end
+
+  def handle_info(_msg, state) do
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_call(:get_state, _from, state) do
     {:reply, state, state}
+  end
+
+  @impl true
+  def handle_info({:promise, promise}, state) do
+    handle_cast({:promise, promise}, state)
+  end
+
+  def handle_info({:accepted, accepted}, state) do
+    handle_cast({:accepted, accepted}, state)
+  end
+
+  def handle_info(_msg, state) do
+    {:noreply, state}
   end
 
   @impl true
@@ -134,6 +186,19 @@ defmodule PaxosConsensus.Paxos.Proposer do
 
         {:noreply, new_state}
     end
+  end
+
+  @impl true
+  def handle_info({:promise, promise}, state) do
+    handle_cast({:promise, promise}, state)
+  end
+
+  def handle_info({:accepted, accepted}, state) do
+    handle_cast({:accepted, accepted}, state)
+  end
+
+  def handle_info(_msg, state) do
+    {:noreply, state}
   end
 
   @impl true
