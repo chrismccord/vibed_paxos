@@ -50,6 +50,9 @@ defmodule PaxosConsensus.Paxos.Learner do
 
   @impl true
   def init({node_id, acceptors}) do
+    # Subscribe to accepted messages from acceptors
+    Phoenix.PubSub.subscribe(PaxosConsensus.PubSub, "learner_updates")
+
     state = %__MODULE__{
       node_id: node_id,
       acceptors: acceptors,
