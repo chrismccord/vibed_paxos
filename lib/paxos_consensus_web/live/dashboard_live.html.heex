@@ -14,8 +14,8 @@
         <div class="text-sm text-gray-400">Real-time Algorithm Visualization</div>
       </div>
     </header>
-
-    <!-- Main Dashboard -->
+    
+<!-- Main Dashboard -->
     <div class="p-6">
       <!-- Status Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -88,13 +88,13 @@
           </div>
         </div>
       </div>
-
-      <!-- Control Panel -->
+      
+<!-- Control Panel -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Node Management -->
         <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
           <h3 class="text-lg font-semibold mb-4 text-white">Node Management</h3>
-          
+
           <.form for={@node_form} id="node-setup-form" phx-submit="setup_nodes" class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-2">
@@ -126,12 +126,17 @@
             </div>
           </.form>
         </div>
-
-        <!-- Propose Value -->
+        
+<!-- Propose Value -->
         <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
           <h3 class="text-lg font-semibold mb-4 text-white">Propose Value</h3>
-          
-          <.form for={@proposal_form} id="proposal-form" phx-submit="propose_value" class="space-y-4">
+
+          <.form
+            for={@proposal_form}
+            id="proposal-form"
+            phx-submit="propose_value"
+            class="space-y-4"
+          >
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-2">
                 Value to Propose
@@ -159,13 +164,13 @@
           </.form>
         </div>
       </div>
-
-      <!-- Current Node Status -->
+      
+<!-- Current Node Status -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
           <h3 class="text-lg font-semibold mb-4 text-white">Active Nodes</h3>
           <div class="space-y-3">
-            {for {id, _pid} <- @proposers do}
+            <%= for {id, _pid} <- @proposers do %>
               <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                 <div class="flex items-center space-x-3">
                   <div class="w-3 h-3 bg-green-400 rounded-full"></div>
@@ -173,9 +178,9 @@
                 </div>
                 <span class="text-green-400 text-sm">Active</span>
               </div>
-            {end}
-            
-            {for {id, _pid} <- @acceptors do}
+            <% end %>
+
+            <%= for {id, _pid} <- @acceptors do %>
               <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                 <div class="flex items-center space-x-3">
                   <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
@@ -183,9 +188,9 @@
                 </div>
                 <span class="text-blue-400 text-sm">Active</span>
               </div>
-            {end}
-            
-            {for {id, _pid} <- @learners do}
+            <% end %>
+
+            <%= for {id, _pid} <- @learners do %>
               <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                 <div class="flex items-center space-x-3">
                   <div class="w-3 h-3 bg-purple-400 rounded-full"></div>
@@ -193,28 +198,28 @@
                 </div>
                 <span class="text-purple-400 text-sm">Active</span>
               </div>
-            {end}
-            
-            {if map_size(@proposers) == 0 and map_size(@acceptors) == 0 and map_size(@learners) == 0}
+            <% end %>
+
+            <%= if map_size(@proposers) == 0 and map_size(@acceptors) == 0 and map_size(@learners) == 0 do %>
               <div class="text-center py-8 text-gray-400">
                 <p>No nodes running</p>
                 <p class="text-sm">Start a cluster to begin</p>
               </div>
-            {end}
+            <% end %>
           </div>
         </div>
-
-        <!-- Real-time Message Flow -->
+        
+<!-- Real-time Message Flow -->
         <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
           <h3 class="text-lg font-semibold mb-4 text-white">Real-time Message Flow</h3>
           <div class="bg-gray-900 rounded-lg p-4 h-64 overflow-y-auto">
             <div class="space-y-2 font-mono text-sm">
-              {if length(@message_log) == 0}
+              <%= if length(@message_log) == 0 do %>
                 <div class="text-gray-500 text-center py-8">
                   No messages yet. Start a cluster and propose a value to see live message flow.
                 </div>
-              {else}
-                {for message <- @message_log do}
+              <% else %>
+                <%= for message <- @message_log do %>
                   <div class={[
                     "text-xs",
                     case message.type do
@@ -232,8 +237,8 @@
                   ]}>
                     [{Calendar.strftime(message.timestamp, "%H:%M:%S")}] {message.content}
                   </div>
-                {end}
-              {end}
+                <% end %>
+              <% end %>
             </div>
           </div>
         </div>
