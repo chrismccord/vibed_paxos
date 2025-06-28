@@ -55,8 +55,8 @@ defmodule PaxosConsensus.PaxosTest do
       task1 = Task.async(fn -> Proposer.propose(proposer1, "value_from_p1") end)
       task2 = Task.async(fn -> Proposer.propose(proposer2, "value_from_p2") end)
 
-      {:ok, round_id1} = Task.await(task1)
-      {:ok, round_id2} = Task.await(task2)
+      {:ok, _round_id1} = Task.await(task1)
+      {:ok, _round_id2} = Task.await(task2)
 
       # Wait for consensus to be reached
       Process.sleep(200)
