@@ -1,0 +1,243 @@
+<Layouts.app flash={@flash}>
+  <div class="min-h-screen bg-gray-900 text-white">
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h1 class="text-xl font-bold text-white">Paxos Consensus Dashboard</h1>
+        </div>
+        <div class="text-sm text-gray-400">Real-time Algorithm Visualization</div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <div class="p-6">
+      <!-- Status Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Active Nodes</p>
+              <p class="text-2xl font-bold text-green-400">
+                {map_size(@proposers) + map_size(@acceptors) + map_size(@learners)}
+              </p>
+            </div>
+            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Consensus Rounds</p>
+              <p class="text-2xl font-bold text-blue-400">{@total_rounds}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z">
+                </path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Success Rate</p>
+              <p class="text-2xl font-bold text-emerald-400">{Float.round(@success_rate, 1)}%</p>
+            </div>
+            <div class="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                >
+                </path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Active Round</p>
+              <p class="text-2xl font-bold text-yellow-400">
+                {if @active_round, do: "##{@active_round}", else: "None"}
+              </p>
+            </div>
+            <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                  clip-rule="evenodd"
+                >
+                </path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Control Panel -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Node Management -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4 text-white">Node Management</h3>
+          
+          <.form for={@node_form} id="node-setup-form" phx-submit="setup_nodes" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">
+                Number of Acceptor Nodes
+              </label>
+              <.input
+                field={@node_form[:count]}
+                type="number"
+                min="1"
+                max="10"
+                value="3"
+                class="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 rounded-lg px-4 py-2 w-full"
+              />
+            </div>
+            <div class="flex space-x-3">
+              <button
+                type="submit"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Start Cluster
+              </button>
+              <button
+                type="button"
+                phx-click="stop_all_nodes"
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Stop All
+              </button>
+            </div>
+          </.form>
+        </div>
+
+        <!-- Propose Value -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4 text-white">Propose Value</h3>
+          
+          <.form for={@proposal_form} id="proposal-form" phx-submit="propose_value" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">
+                Value to Propose
+              </label>
+              <.input
+                field={@proposal_form[:value]}
+                type="text"
+                placeholder="Enter a value to reach consensus on..."
+                class="bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500 rounded-lg px-4 py-2 w-full"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={map_size(@proposers) == 0}
+              class={[
+                "w-full font-medium py-2 px-4 rounded-lg transition-colors",
+                if(map_size(@proposers) == 0,
+                  do: "bg-gray-600 text-gray-400 cursor-not-allowed",
+                  else: "bg-green-600 hover:bg-green-700 text-white"
+                )
+              ]}
+            >
+              Initiate Consensus Round
+            </button>
+          </.form>
+        </div>
+      </div>
+
+      <!-- Current Node Status -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4 text-white">Active Nodes</h3>
+          <div class="space-y-3">
+            {for {id, _pid} <- @proposers do}
+              <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <span class="font-medium text-white">{id} (Proposer)</span>
+                </div>
+                <span class="text-green-400 text-sm">Active</span>
+              </div>
+            {end}
+            
+            {for {id, _pid} <- @acceptors do}
+              <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
+                  <span class="font-medium text-white">{id} (Acceptor)</span>
+                </div>
+                <span class="text-blue-400 text-sm">Active</span>
+              </div>
+            {end}
+            
+            {for {id, _pid} <- @learners do}
+              <div class="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="w-3 h-3 bg-purple-400 rounded-full"></div>
+                  <span class="font-medium text-white">{id} (Learner)</span>
+                </div>
+                <span class="text-purple-400 text-sm">Active</span>
+              </div>
+            {end}
+            
+            {if map_size(@proposers) == 0 and map_size(@acceptors) == 0 and map_size(@learners) == 0}
+              <div class="text-center py-8 text-gray-400">
+                <p>No nodes running</p>
+                <p class="text-sm">Start a cluster to begin</p>
+              </div>
+            {end}
+          </div>
+        </div>
+
+        <!-- Real-time Message Flow -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 class="text-lg font-semibold mb-4 text-white">Real-time Message Flow</h3>
+          <div class="bg-gray-900 rounded-lg p-4 h-64 overflow-y-auto">
+            <div class="space-y-2 font-mono text-sm">
+              {if length(@message_log) == 0}
+                <div class="text-gray-500 text-center py-8">
+                  No messages yet. Start a cluster and propose a value to see live message flow.
+                </div>
+              {else}
+                {for message <- @message_log do}
+                  <div class={[
+                    "text-xs",
+                    case message.type do
+                      :system -> "text-gray-400"
+                      :prepare -> "text-blue-400"
+                      :promise -> "text-green-400"
+                      :accept -> "text-yellow-400"
+                      :accepted -> "text-emerald-400"
+                      :consensus -> "text-purple-400 font-bold"
+                      :learned -> "text-cyan-400"
+                      :propose -> "text-orange-400"
+                      :error -> "text-red-400"
+                      _ -> "text-gray-300"
+                    end
+                  ]}>
+                    [{Calendar.strftime(message.timestamp, "%H:%M:%S")}] {message.content}
+                  </div>
+                {end}
+              {end}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layouts.app>
