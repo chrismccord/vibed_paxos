@@ -66,7 +66,7 @@ defmodule PaxosConsensus.PaxosRecoveryTest do
       GenServer.stop(proposer1)
 
       # Check that some acceptors may have accepted the first value
-      acceptor1_state = Acceptor.get_state(acceptor1)
+      _acceptor1_state = Acceptor.get_state(acceptor1)
       # At least one acceptor should have seen the first proposal
 
       # New proposer with different value - MUST adopt first value if it was accepted
