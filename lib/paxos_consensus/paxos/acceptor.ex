@@ -73,7 +73,9 @@ defmodule PaxosConsensus.Paxos.Acceptor do
       }
 
       # Send promise back to proposer
-      send(from, {:promise, promise})
+      if is_pid(from),
+        do: send(from, {:promise, promise}),
+        else: send(Process.whereis(from), {:promise, promise})
 
       # Broadcast to dashboard
       Phoenix.PubSub.broadcast(
@@ -108,7 +110,9 @@ defmodule PaxosConsensus.Paxos.Acceptor do
         {:accepted, accepted}
       )
 
-      send(from, {:accepted, accepted})
+      if is_pid(from),
+        do: send(from, {:accepted, accepted}),
+        else: send(Process.whereis(from), {:accepted, accepted})
 
       # Broadcast to dashboard
       Phoenix.PubSub.broadcast(
