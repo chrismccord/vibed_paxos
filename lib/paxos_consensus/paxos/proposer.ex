@@ -239,7 +239,11 @@ defmodule PaxosConsensus.Paxos.Proposer do
 
     # Send ACCEPT messages to all acceptors
     Enum.each(state.acceptors, fn acceptor ->
-      send(acceptor, {:accept, round.proposal.number, value, state.node_id})
+      case Process.whereis(acceptor) do
+        # Skip dead acceptors
+        nil -> :ok
+        _pid -> send(acceptor, {:accept, round.proposal.number, value, state.node_id})
+      end
     end)
 
     # Broadcast accept phase started
